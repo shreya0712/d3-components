@@ -1,0 +1,6 @@
+:host {
+  display: block;
+}
+.overlay {
+  opacity: 0;
+}
