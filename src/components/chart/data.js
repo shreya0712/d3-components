@@ -12,7 +12,7 @@ export default JSON.stringify([
   { x: 1575367200000, Yesterday: 4745697, formatted: "10:00", SDLW: 4613814 },
   { x: 1575370800000, Yesterday: 8811933, formatted: "11:00", SDLW: 8855247 },
   { x: 1575374400000, Yesterday: 23552870, formatted: "12:00", SDLW: 22963636 },
-  { x: 1575378000000, Yesterday: 27366378, formatted: "13:00", SDLW: 25650427 },
+  { x: 1575378000000, Yesterday: null, formatted: "13:00", SDLW: 42963636 },
   { x: 1575381600000, Yesterday: 21126368, formatted: "14:00", SDLW: 20652997 },
   { x: 1575385200000, Yesterday: 15519843, formatted: "15:00", SDLW: 15296866 },
   { x: 1575388800000, Yesterday: 13443279, formatted: "16:00", SDLW: 13236768 },
@@ -21,6 +21,6 @@ export default JSON.stringify([
   { x: 1575399600000, Yesterday: 38390564, formatted: "19:00", SDLW: 38157530 },
   { x: 1575403200000, Yesterday: 48332207, formatted: "20:00", SDLW: 47123139 },
   { x: 1575406800000, Yesterday: 39724148, formatted: "21:00", SDLW: 39318244 },
-  { x: 1575410400000, Yesterday: 21299274, formatted: "22:00", SDLW: 23259947 },
-  { x: 1575414000000, Yesterday: 1187846, formatted: "23:00", SDLW: 13073962 }
+  { x: 1575410400000, Yesterday: null, formatted: "22:00", SDLW: 23259947 },
+  { x: 1575414000000, Yesterday: null, formatted: "23:00", SDLW: 13073962 }
 ]);

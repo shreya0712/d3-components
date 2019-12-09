@@ -3,10 +3,8 @@ import * as d3 from "d3";
 import stringData from "./data.js";
 
 const defaultData = JSON.parse(stringData);
-const xPoint = "x";
-const xFormatted = "formatted";
-const y1Point = "Yesterday";
-const y2Point = "SDLW";
+const colors = ["#3275ff", "#a7c3ff"];
+const connectNulls = true;
 
 @Component({
   tag: "line-chart-2",
@@ -20,6 +18,13 @@ export class Chart {
     tickSize?: number;
     fontSize?: string;
     strokeWidth?: number;
+    formattedKey?: string;
+  };
+  private yAxisProps: {
+    dataKey: string[];
+    tickSize?: number;
+    fontSize?: string;
+    strokeWidth?: number;
   };
 
   @Prop() width: string;
@@ -30,10 +35,26 @@ export class Chart {
   @Prop() marginbottom: string;
   @Prop() data: string;
   @Prop() data2: { key: string };
-  @Prop() xAxis: string;
+  @Prop() xaxis: string;
+  @Prop() yaxis: string;
+  @Prop() enabledots: number;
 
   constructor() {
-    this.xAxisProps = JSON.parse(this.xAxis);
+    const xAxis = JSON.parse(this.xaxis);
+    this.xAxisProps = {
+      dataKey: xAxis.dataKey,
+      tickSize: +xAxis.tickSize,
+      fontSize: xAxis.fontSize,
+      strokeWidth: +xAxis.strokeWidth,
+      formattedKey: xAxis.formattedKey
+    };
+    const yAxis = JSON.parse(this.yaxis);
+    this.yAxisProps = {
+      dataKey: yAxis.dataKey.split(","),
+      tickSize: +yAxis.tickSize,
+      fontSize: yAxis.fontSize,
+      strokeWidth: +yAxis.strokeWidth
+    };
   }
 
   createSvgGroup(parent, width, height, marginleft, margintop) {
@@ -47,139 +68,55 @@ export class Chart {
       .attr("width", width)
       .attr("height", height);
 
-    const g = svg
-      .append("g")
-      .attr("transform", "translate(" + marginleft + "," + margintop + ")");
+    const g = svg.append("g").attr("transform", "translate(" + marginleft + "," + margintop + ")");
     return g;
   }
-
-  componentDidRender() {
-    console.log(this.data2);
-    const data = this.data ? JSON.parse(this.data) : defaultData; //TODO: []
-    const minMargin = 50;
-
-    let width = +this.width || 400,
-      height = +this.height || 500,
-      marginbottom = minMargin + (+this.marginbottom || 0),
-      margintop = +this.margintop || 0,
-      marginleft = minMargin + (+this.marginleft || 0),
-      marginright = +this.marginright || 0,
-      pathHeight = height - margintop - marginbottom,
-      pathwidth = width - marginleft - marginright,
-      xTickWidth = 50;
-
-    const g = this.createSvgGroup(
-      this.divRef,
-      width,
-      height,
-      marginleft,
-      margintop
+  createTooltip(g) {
+    return (
+      g
+        .append("foreignObject")
+        // .attr("text-anchor", "end")
+        .attr("width", 300)
+        .attr("height", 300)
+        .attr("x", -150)
+        .attr("y", -150)
+        .append("xhtml:div")
+        .attr("class", "tooltip")
+        .style("display", "none")
     );
+  }
 
-    //scale
-    const x = d3.scalePoint().range([0, pathwidth]);
-    const y = d3.scaleLinear().range([pathHeight, 0]);
-
-    const visibleTicks =
+  getVisibleTicks(data, axisLength, tickWidth) {
+    return (
       data.filter((_d, i) => {
-        const count = Math.floor(pathwidth / xTickWidth);
+        const count = Math.floor(axisLength / tickWidth);
         const tickCount = Math.floor(data.length / count);
         return !(i % tickCount);
-      }) || [];
-
-    //axis generator
-    const xAxisCall = d3
-      .axisBottom(x)
-      .tickValues(visibleTicks.map(d => d[xPoint]))
-      .tickFormat(function(_d, i) {
-        return visibleTicks.map(d => d[xFormatted])[i];
-      });
-
-    // const xAxisCall = d3.axisBottom(x).ticks(d3.timeDay);
-
-    const yAxisCall = d3
-      .axisLeft(y)
-      .ticks(5)
-      .tickFormat(d => d / 1000000 + "M");
-
-    //axes groups
-
-    const xAxis = g
-      .append("g")
-      .attr("class", "x-axis")
-      .attr("transform", "translate(0," + pathHeight + ")");
-
-    const yAxis = g
-      .append("g")
-      .attr("class", "y-axis")
-      .attr("stroke-width", 1);
-
-    //path generator
-    const line = d3
-      .line()
-      .x(d => x(d[xPoint]))
-      .y(d => y(d[y1Point]));
-    // .curve(d3.curveMonotoneX);
-
-    const line2 = d3
-      .line()
-      .x(d => x(d[xPoint]))
-      .y(d => y(d[y2Point]));
-    // .curve(d3.curveMonotoneX);
-
-    // read and format data
-
-    // data.forEach(d => {
-    //   d[xPoint] = parseTime(d[xPoint]);
-    // });
-
-    //set domains for scales
-    x.domain(data.map(d => d[xPoint]));
-    y.domain([
-      0,
-      Math.max(
-        d3.max(data, d => d[y1Point]),
-        d3.max(data, d => d[y2Point])
-      )
-    ]);
-
-    //generate axes
-
-    xAxis.call(xAxisCall);
-    yAxis.call(yAxisCall);
-
-    const path2 = g
-      .append("path")
-      .data([data])
-      .attr("class", "line")
-      .attr("fill", "none")
-      .attr("stroke-width", 2)
-      .attr("stroke", "#a7c3ff")
-      .attr("d", line2);
-    var totalLength2 = path2.node().getTotalLength();
-    path2
-      .attr("stroke-dasharray", totalLength2)
-      .attr("stroke-dashoffset", totalLength2)
+      }) || []
+    );
+  }
+  appendPath(g, _data, pathGenerator, strokeWidth, color) {
+    return (
+      g
+        .append("path")
+        // .data([data])
+        .data([pathGenerator.filteredData])
+        .attr("class", "line")
+        .attr("fill", "none")
+        .attr("stroke-width", strokeWidth)
+        .attr("stroke", color)
+        .attr("d", pathGenerator.line)
+    );
+  }
+  animateChart(path, pathLength, duration) {
+    path
+      .attr("stroke-dasharray", pathLength)
+      .attr("stroke-dashoffset", pathLength)
       .transition()
-      .duration(1000)
+      .duration(duration)
       .attr("stroke-dashoffset", 0);
-    const path1 = g
-      .append("path")
-      .data([data])
-      .attr("class", "line")
-      .attr("fill", "none")
-      .attr("stroke-width", 3)
-      .attr("stroke", "#3275ff")
-      .attr("d", line);
-    var totalLength1 = path1.node().getTotalLength();
-
-    path1
-      .attr("stroke-dasharray", totalLength1)
-      .attr("stroke-dashoffset", totalLength1)
-      .transition()
-      .duration(1000)
-      .attr("stroke-dashoffset", 0);
-
+  }
+  addDots(g, data, xFunction, yFunction, xPropName, yPropName, radius) {
     g.selectAll("line-circle")
       .data(data)
       .enter()
@@ -189,22 +126,180 @@ export class Chart {
       .attr("stroke-width", 1)
       .attr("stroke", "#3275ff")
       .attr("cx", function(d) {
-        return x(d[xPoint]);
+        return xFunction(d[xPropName]);
       })
       .attr("cy", function(d) {
-        return y(d[y1Point]);
+        return yFunction(d[yPropName]);
       })
       .attr("r", 0)
       .transition()
-      .duration(1000)
-      .attr("r", 3);
+      .delay(1000)
+      .attr("r", d => {
+        return d[yPropName] !== null ? radius : 0;
+      });
+  }
+
+  getTooltipPosition(chartHeight, chartWidth) {
+    return function(x, y) {
+      let tooltipX, tooltipY;
+      if (x < chartWidth / 2) {
+        tooltipX = 10;
+      } else tooltipX = -110;
+
+      if (y < chartHeight / 2) {
+        tooltipY = 10;
+      } else tooltipY = -110;
+
+      return [tooltipX, tooltipY];
+    };
+  }
+  componentDidRender() {
+    const self = this;
+    const data = this.data ? JSON.parse(this.data) : defaultData; //TODO: []
+    const minMargin = 50;
+
+    let width = +this.width || 400,
+      height = +this.height || 500,
+      marginbottom = minMargin + (+this.marginbottom || 0),
+      margintop = +this.margintop || 10,
+      marginleft = minMargin + (+this.marginleft || 0),
+      marginright = +this.marginright || 10,
+      pathHeight = height - margintop - marginbottom,
+      pathwidth = width - marginleft - marginright,
+      xTickWidth = 50,
+      yTickWidth = 40,
+      enableDots = +this.enabledots;
+
+    const g = this.createSvgGroup(this.divRef, width, height, marginleft, margintop);
+
+    //scale
+    const x = d3.scalePoint().range([0, pathwidth]);
+    const y = d3.scaleLinear().range([pathHeight, 0]);
+    const xVisibleTicks = this.getVisibleTicks(data, pathwidth, xTickWidth);
+
+    //axis generator
+    const xAxisCall = d3.axisBottom(x).tickValues(
+      xVisibleTicks.map(d => {
+        return d[self.xAxisProps.dataKey];
+      })
+    );
+    if (this.xAxisProps.formattedKey) {
+      xAxisCall.tickFormat((_d, i) => {
+        return xVisibleTicks.map(d => d[this.xAxisProps.formattedKey])[i];
+      });
+    }
+
+    const yTickCount = Math.floor(pathHeight / yTickWidth);
+    const yAxisCall = d3
+      .axisLeft(y)
+      .ticks(yTickCount)
+      .tickFormat(d => {
+        // TODO add formatter
+        return d / 1000000 + "M";
+      });
+
+    //axes groups
+
+    const xAxis = g
+      .append("g")
+      .attr("class", "x-axis")
+      .attr("transform", "translate(0," + pathHeight + ")")
+      .attr("stroke-width", isNaN(this.xAxisProps.strokeWidth) ? 1 : this.xAxisProps.strokeWidth);
+
+    const yAxis = g
+      .append("g")
+      .attr("class", "y-axis")
+      .attr("stroke-width", isNaN(this.yAxisProps.strokeWidth) ? 1 : this.yAxisProps.strokeWidth);
+
+    //path generator
+
+    const linesGenerator: Array<any> = this.yAxisProps.dataKey.map(key => {
+      let line = d3
+        .line()
+        .defined(function(d) {
+          return d[key] !== null && d[key] !== undefined;
+        })
+        .x(d => x(d[self.xAxisProps.dataKey]))
+        .y(d => y(d[key]))
+        .curve(d3.curveMonotoneX);
+      const filteredData = data.filter(line.defined());
+      return { line, filteredData: connectNulls ? filteredData : data };
+    });
+    // read and format data
+
+    // data.forEach(d => {
+    //   d[this.xAxisProps.dataKey] = parseTime(d[this.xAxisProps.dataKey]);
+    // });
+
+    //set domains for scales
+    x.domain(data.map(d => d[self.xAxisProps.dataKey]));
+    y.domain([0, Math.max(...this.yAxisProps.dataKey.map(key => d3.max(data, d => d[key])))]);
+
+    //generate axes
+
+    xAxis.call(xAxisCall);
+    yAxis.call(yAxisCall);
+
+    //generate lines and animate it
+    var lines = g.append("g").attr("class", "lines");
+
+    this.yAxisProps.dataKey.forEach((_key, i) => {
+      const length = this.yAxisProps.dataKey.length;
+      const linePath = this.appendPath(
+        lines,
+        data,
+        linesGenerator[length - i - 1],
+        i === length - 1 ? 3 : 2,
+        colors[length - i - 1]
+      );
+      var totalLength = linePath.node().getTotalLength();
+      this.animateChart(linePath, totalLength, 1000);
+    });
+
+    //legend
+    const legend = g.append("g").attr("class", "legend");
+    this.yAxisProps.dataKey.forEach((key, i) => {
+      const width = pathwidth / this.yAxisProps.dataKey.length;
+      const singleLegend = legend.append("g").attr("class", "legend " + i);
+      singleLegend
+        .append("line")
+        .attr("x1", width * i + 20)
+        .attr("y1", margintop + pathHeight + 20)
+        .attr("x2", width * i + 20 + 15)
+        .attr("y2", margintop + pathHeight + 20)
+        .attr("stroke", colors[i])
+        .attr("stroke-width", 2);
+
+      singleLegend
+        .append("text")
+        .text(key)
+        .attr("x", width * i + 20 + 20)
+        .attr("y", margintop + pathHeight + 20)
+        .attr("font-size", "10px");
+    });
+
+    //add dots
+    let dotsGroup = g.append("g").attr("class", "dots-group");
+    enableDots ? this.addDots(dotsGroup, data, x, y, self.xAxisProps.dataKey, self.yAxisProps.dataKey[0], 3) : null;
 
     //tooltip
-    const bisectDate = d3.bisector(d => d[xPoint]).left;
+    const bisectX = d3.bisector(d => d[self.xAxisProps.dataKey]).left;
     const focus = g
       .append("g")
       .attr("class", "focus")
       .attr("display", "none");
+
+    const tooltip = this.createTooltip(focus);
+    tooltip.append("div").attr("class", "tooltip-x");
+
+    this.yAxisProps.dataKey.forEach(key => {
+      var tooltipSeries = tooltip.append("div");
+      tooltipSeries
+        .append("span")
+        .attr("class", "tooltip-title tooltip-" + key)
+        .text(key + ":");
+      tooltipSeries.append("span").attr("class", "tooltip-value value-" + key);
+    });
 
     focus
       .append("line")
@@ -217,41 +312,53 @@ export class Chart {
     c1.attr("stroke-width", 2)
       .attr("stroke", "#a7c3ff")
       .attr("fill", "#3275ff");
-    // const c2 = focus
-    //   .append("circle")
-    //   .attr("r", 2)
-    //   .attr("fill", "#3275ff");
-    focus
-      .append("text")
-      .attr("x", 15)
-      .append("dy", "0.31em");
+    /**const c2 = focus
+       .append("circle")
+       .attr("r", 2)
+       .attr("fill", "#3275ff"); **/
 
-    g.append("rect")
+    // focus
+    //   .append("text")
+    //   .attr("x", 15)
+    //   .append("dy", "0.31em");
+
+    const overlay = g
+      .append("rect")
       .attr("class", "overlay")
       .attr("height", pathHeight)
-      .attr("width", pathwidth)
+      .attr("width", pathwidth);
+    const getTooltipPosition = this.getTooltipPosition(pathHeight, pathwidth);
+    overlay
+      .on("mouseout", function() {
+        // focus.style("display", "none");
+        // tooltip.style("display", "none");
+      })
       .on("mouseover", function() {
         focus.style("display", "block");
-      })
-      .on("mouseout", function() {
-        focus.style("display", "none");
+        tooltip.style("display", "block");
       })
       .on("mousemove", function() {
         var eachBand = x.step();
-        var index = Math.round(d3.mouse(this)[0] / eachBand);
+        const position = d3.mouse(this);
+        var index = Math.round(position[0] / eachBand);
         var x0 = x.domain()[index];
-        const i = bisectDate(data, +x0, 0);
+        const i = bisectX(data, +x0, 0);
         const d = data[i];
-        focus.attr(
-          "transform",
-          "translate(" + x(d[xPoint]) + "," + y(d[y1Point]) + ")"
-        );
-        focus.select("text").text(d[y1Point]);
+        var y0 = d[self.yAxisProps.dataKey[0]];
+        focus.attr("transform", "translate(" + x(x0) + "," + y(y0) + ")");
         focus
           .select(".y-hover-line")
-          .attr("y2", -y(d[y1Point]))
-          .attr("y1", pathHeight - y(d[y1Point]));
-        focus.select(".x-hover-line").attr("x2", -x(d[xPoint]));
+          .attr("y2", -y(y0))
+          .attr("y1", pathHeight - y(y0));
+        const tooltipPosition = getTooltipPosition(x(x0), y(y0));
+        tooltip.attr("style", "left:" + tooltipPosition[0] + "px;top:" + tooltipPosition[1] + "px;");
+
+        focus.select(".x-hover-line").attr("x2", -x(x0));
+        tooltip.select(".tooltip-x").text(d[self.xAxisProps.formattedKey]);
+        tooltip.select(".tooltip-value").text(y0);
+        self.yAxisProps.dataKey.forEach(key => {
+          tooltip.select("tooltip-value value-" + key).text(y0);
+        });
       });
   }
 

@@ -22,13 +22,15 @@ export namespace Components {
   interface LineChart2 {
     'data': string;
     'data2': { key: string };
+    'enabledots': number;
     'height': string;
     'marginbottom': string;
     'marginleft': string;
     'marginright': string;
     'margintop': string;
     'width': string;
-    'xAxis': string;
+    'xaxis': string;
+    'yaxis': string;
   }
   interface MyComponent {
     /**
@@ -86,13 +88,15 @@ declare namespace LocalJSX {
   interface LineChart2 {
     'data'?: string;
     'data2'?: { key: string };
+    'enabledots'?: number;
     'height'?: string;
     'marginbottom'?: string;
     'marginleft'?: string;
     'marginright'?: string;
     'margintop'?: string;
     'width'?: string;
-    'xAxis'?: string;
+    'xaxis'?: string;
+    'yaxis'?: string;
   }
   interface MyComponent {
     /**
