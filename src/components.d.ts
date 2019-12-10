@@ -11,18 +11,12 @@ import { HTMLStencilElement, JSXBase } from '@stencil/core/internal';
 
 export namespace Components {
   interface LineChart {
-    'data': string;
-    'height': string;
-    'marginbottom': string;
-    'marginleft': string;
-    'marginright': string;
-    'margintop': string;
-    'width': string;
-  }
-  interface LineChart2 {
+    'connectnulls': number;
     'data': string;
     'data2': { key: string };
+    'dotcolor': string;
     'enabledots': number;
+    'formatter': any;
     'height': string;
     'marginbottom': string;
     'marginleft': string;
@@ -57,12 +51,6 @@ declare global {
     new (): HTMLLineChartElement;
   };
 
-  interface HTMLLineChart2Element extends Components.LineChart2, HTMLStencilElement {}
-  var HTMLLineChart2Element: {
-    prototype: HTMLLineChart2Element;
-    new (): HTMLLineChart2Element;
-  };
-
   interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {}
   var HTMLMyComponentElement: {
     prototype: HTMLMyComponentElement;
@@ -70,25 +58,18 @@ declare global {
   };
   interface HTMLElementTagNameMap {
     'line-chart': HTMLLineChartElement;
-    'line-chart-2': HTMLLineChart2Element;
     'my-component': HTMLMyComponentElement;
   }
 }
 
 declare namespace LocalJSX {
   interface LineChart {
-    'data'?: string;
-    'height'?: string;
-    'marginbottom'?: string;
-    'marginleft'?: string;
-    'marginright'?: string;
-    'margintop'?: string;
-    'width'?: string;
-  }
-  interface LineChart2 {
+    'connectnulls'?: number;
     'data'?: string;
     'data2'?: { key: string };
+    'dotcolor'?: string;
     'enabledots'?: number;
+    'formatter'?: any;
     'height'?: string;
     'marginbottom'?: string;
     'marginleft'?: string;
@@ -115,7 +96,6 @@ declare namespace LocalJSX {
 
   interface IntrinsicElements {
     'line-chart': LineChart;
-    'line-chart-2': LineChart2;
     'my-component': MyComponent;
   }
 }
@@ -127,7 +107,6 @@ declare module "@stencil/core" {
   export namespace JSX {
     interface IntrinsicElements {
       'line-chart': LocalJSX.LineChart & JSXBase.HTMLAttributes<HTMLLineChartElement>;
-      'line-chart-2': LocalJSX.LineChart2 & JSXBase.HTMLAttributes<HTMLLineChart2Element>;
       'my-component': LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
     }
   }

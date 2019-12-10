@@ -9,15 +9,16 @@
     <script nomodule src="/build/stencil-charts.js"></script>
   </head>
   <body>
-    <my-component first="Stencil" last="'Don't call me a framework' JS"></my-component>
-    <div style="margin-top: 100px; margin-left:100px">
-      <line-chart-2
+    <div style="margin-top: 100px; margin-left:100px; font-family: sans-serif; color:gray">
+      <line-chart
+        data='[{"x":1575849600000,"This week":1109997,"formatted":"Monday","Last Week":1238534},{"x":1575936000000,"This week":177241,"formatted":"Tuesday","Last Week":284589}]'
         enabledots="1"
         height="250"
         width="550"
         xAxis='{"dataKey": "x", "formattedKey": "formatted"}'
-        yAxis='{"dataKey": "Yesterday,SDLW", "strokeWidth": "0"}'
-      ></line-chart-2>
+        yAxis='{"dataKey": "This week,Last Week", "strokeWidth": "0", "colors": "#3275ff, #a7c3ff"}'
+        connectnulls="1"
+      ></line-chart>
     </div>
   </body>
 </html>

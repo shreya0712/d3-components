@@ -9,9 +9,12 @@
 
 | Property       | Attribute      | Description | Type               | Default     |
 | -------------- | -------------- | ----------- | ------------------ | ----------- |
+| `connectnulls` | `connectnulls` |             | `number`           | `undefined` |
 | `data`         | `data`         |             | `string`           | `undefined` |
 | `data2`        | --             |             | `{ key: string; }` | `undefined` |
+| `dotcolor`     | `dotcolor`     |             | `string`           | `undefined` |
 | `enabledots`   | `enabledots`   |             | `number`           | `undefined` |
+| `formatter`    | `formatter`    |             | `any`              | `undefined` |
 | `height`       | `height`       |             | `string`           | `undefined` |
 | `marginbottom` | `marginbottom` |             | `string`           | `undefined` |
 | `marginleft`   | `marginleft`   |             | `string`           | `undefined` |

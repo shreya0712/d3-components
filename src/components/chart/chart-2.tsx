@@ -1,13 +1,8 @@
 import { Component, Prop, h } from "@stencil/core";
 import * as d3 from "d3";
-import stringData from "./data.js";
-
-const defaultData = JSON.parse(stringData);
-const colors = ["#3275ff", "#a7c3ff"];
-const connectNulls = true;
 
 @Component({
-  tag: "line-chart-2",
+  tag: "line-chart",
   styleUrl: "chart.css",
   shadow: true
 })
@@ -25,6 +20,8 @@ export class Chart {
     tickSize?: number;
     fontSize?: string;
     strokeWidth?: number;
+    colors?: string[];
+    axisPrefix?: string;
   };
 
   @Prop() width: string;
@@ -38,6 +35,9 @@ export class Chart {
   @Prop() xaxis: string;
   @Prop() yaxis: string;
   @Prop() enabledots: number;
+  @Prop() connectnulls: number;
+  @Prop() formatter: any;
+  @Prop() dotcolor: string;
 
   constructor() {
     const xAxis = JSON.parse(this.xaxis);
@@ -49,11 +49,14 @@ export class Chart {
       formattedKey: xAxis.formattedKey
     };
     const yAxis = JSON.parse(this.yaxis);
+
     this.yAxisProps = {
       dataKey: yAxis.dataKey.split(","),
       tickSize: +yAxis.tickSize,
       fontSize: yAxis.fontSize,
-      strokeWidth: +yAxis.strokeWidth
+      strokeWidth: +yAxis.strokeWidth,
+      colors: yAxis.colors ? yAxis.colors.split(",") : d3.schemeCategory10,
+      axisPrefix: yAxis.axisprefix || ""
     };
   }
 
@@ -122,7 +125,7 @@ export class Chart {
       .enter()
       .append("circle")
       .attr("class", "data-circle")
-      .attr("fill", "white")
+      .attr("fill", this.dotcolor || "white")
       .attr("stroke-width", 1)
       .attr("stroke", "#3275ff")
       .attr("cx", function(d) {
@@ -135,7 +138,9 @@ export class Chart {
       .transition()
       .delay(1000)
       .attr("r", d => {
-        return d[yPropName] !== null ? radius : 0;
+        {
+          return d[yPropName] !== null && d[yPropName] !== undefined ? radius : 0;
+        }
       });
   }
 
@@ -153,11 +158,35 @@ export class Chart {
       return [tooltipX, tooltipY];
     };
   }
+  addLegend(g, containerWidth, positionFromTop) {
+    const legend = g.append("g").attr("class", "legend");
+    this.yAxisProps.dataKey.forEach((key, i) => {
+      const width = containerWidth / this.yAxisProps.dataKey.length;
+      const singleLegend = legend.append("g").attr("class", "legend " + i);
+      singleLegend
+        .append("line")
+        .attr("x1", width * i + 20)
+        .attr("y1", positionFromTop)
+        .attr("x2", width * i + 20 + 15)
+        .attr("y2", positionFromTop)
+        .attr("stroke", this.yAxisProps.colors[i])
+        .attr("stroke-width", 2);
+      singleLegend
+        .append("text")
+        .text(key)
+        .attr("x", width * i + 20 + 20)
+        .attr("y", positionFromTop + 5)
+        .attr("stroke", "currentColor")
+        .attr("font-size", "0.8em")
+        .attr("stroke-width", 1)
+        .attr("font-weight", "lighter");
+    });
+    return legend;
+  }
   componentDidRender() {
     const self = this;
-    const data = this.data ? JSON.parse(this.data) : defaultData; //TODO: []
+    const data = this.data ? JSON.parse(this.data) : [];
     const minMargin = 50;
-
     let width = +this.width || 400,
       height = +this.height || 500,
       marginbottom = minMargin + (+this.marginbottom || 0),
@@ -168,7 +197,8 @@ export class Chart {
       pathwidth = width - marginleft - marginright,
       xTickWidth = 50,
       yTickWidth = 40,
-      enableDots = +this.enabledots;
+      enableDots = +this.enabledots,
+      connectNulls = +this.connectnulls;
 
     const g = this.createSvgGroup(this.divRef, width, height, marginleft, margintop);
 
@@ -194,8 +224,7 @@ export class Chart {
       .axisLeft(y)
       .ticks(yTickCount)
       .tickFormat(d => {
-        // TODO add formatter
-        return d / 1000000 + "M";
+        return this.formatter ? this.formatter(d) + this.yAxisProps.axisPrefix : d;
       });
 
     //axes groups
@@ -250,33 +279,14 @@ export class Chart {
         data,
         linesGenerator[length - i - 1],
         i === length - 1 ? 3 : 2,
-        colors[length - i - 1]
+        this.yAxisProps.colors[length - i - 1]
       );
       var totalLength = linePath.node().getTotalLength();
       this.animateChart(linePath, totalLength, 1000);
     });
 
     //legend
-    const legend = g.append("g").attr("class", "legend");
-    this.yAxisProps.dataKey.forEach((key, i) => {
-      const width = pathwidth / this.yAxisProps.dataKey.length;
-      const singleLegend = legend.append("g").attr("class", "legend " + i);
-      singleLegend
-        .append("line")
-        .attr("x1", width * i + 20)
-        .attr("y1", margintop + pathHeight + 20)
-        .attr("x2", width * i + 20 + 15)
-        .attr("y2", margintop + pathHeight + 20)
-        .attr("stroke", colors[i])
-        .attr("stroke-width", 2);
-
-      singleLegend
-        .append("text")
-        .text(key)
-        .attr("x", width * i + 20 + 20)
-        .attr("y", margintop + pathHeight + 20)
-        .attr("font-size", "10px");
-    });
+    this.addLegend(g, pathwidth, margintop + pathHeight + 20);
 
     //add dots
     let dotsGroup = g.append("g").attr("class", "dots-group");
@@ -290,15 +300,20 @@ export class Chart {
       .attr("display", "none");
 
     const tooltip = this.createTooltip(focus);
-    tooltip.append("div").attr("class", "tooltip-x");
+    tooltip
+      .append("div")
+      .attr("class", "tooltip-x")
+      .attr("style", "color:white");
 
-    this.yAxisProps.dataKey.forEach(key => {
+    this.yAxisProps.dataKey.forEach((key, i) => {
       var tooltipSeries = tooltip.append("div");
       tooltipSeries
         .append("span")
-        .attr("class", "tooltip-title tooltip-" + key)
-        .text(key + ":");
-      tooltipSeries.append("span").attr("class", "tooltip-value value-" + key);
+        .attr("class", "tooltip-title tooltip-" + key.replace(" ", "_"))
+        .text(key + ": ")
+        .attr("font-size", "0.8em")
+        .attr("style", "color:" + self.yAxisProps.colors[i]);
+      tooltipSeries.append("span").attr("class", "tooltip-value value-" + key.replace(" ", "_"));
     });
 
     focus
@@ -330,21 +345,23 @@ export class Chart {
     const getTooltipPosition = this.getTooltipPosition(pathHeight, pathwidth);
     overlay
       .on("mouseout", function() {
-        // focus.style("display", "none");
-        // tooltip.style("display", "none");
+        focus.style("display", "none");
+        tooltip.style("display", "none");
       })
-      .on("mouseover", function() {
+      .on("click", function() {
         focus.style("display", "block");
         tooltip.style("display", "block");
-      })
-      .on("mousemove", function() {
         var eachBand = x.step();
         const position = d3.mouse(this);
         var index = Math.round(position[0] / eachBand);
         var x0 = x.domain()[index];
         const i = bisectX(data, +x0, 0);
         const d = data[i];
-        var y0 = d[self.yAxisProps.dataKey[0]];
+        var y0 =
+          d[self.yAxisProps.dataKey[0]] !== null && d[self.yAxisProps.dataKey[0]] !== undefined
+            ? d[self.yAxisProps.dataKey[0]]
+            : d[self.yAxisProps.dataKey[1]];
+
         focus.attr("transform", "translate(" + x(x0) + "," + y(y0) + ")");
         focus
           .select(".y-hover-line")
@@ -352,12 +369,19 @@ export class Chart {
           .attr("y1", pathHeight - y(y0));
         const tooltipPosition = getTooltipPosition(x(x0), y(y0));
         tooltip.attr("style", "left:" + tooltipPosition[0] + "px;top:" + tooltipPosition[1] + "px;");
-
         focus.select(".x-hover-line").attr("x2", -x(x0));
         tooltip.select(".tooltip-x").text(d[self.xAxisProps.formattedKey]);
-        tooltip.select(".tooltip-value").text(y0);
-        self.yAxisProps.dataKey.forEach(key => {
-          tooltip.select("tooltip-value value-" + key).text(y0);
+        self.yAxisProps.dataKey.forEach((key, i) => {
+          tooltip
+            .select(".value-" + key.replace(" ", "_"))
+            .text(
+              d[key] !== null && d[key] !== undefined
+                ? self.formatter
+                  ? self.formatter(d[key]) + self.yAxisProps.axisPrefix
+                  : d[key]
+                : "-"
+            )
+            .attr("style", "color:" + self.yAxisProps.colors[i]);
         });
       });
   }
