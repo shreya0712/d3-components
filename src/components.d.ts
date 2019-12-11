@@ -10,6 +10,22 @@ import { HTMLStencilElement, JSXBase } from '@stencil/core/internal';
 
 
 export namespace Components {
+  interface AreaChart {
+    'data': string;
+    'endcolor': string;
+    'endopacity': string;
+    'height': string;
+    'marginbottom': string;
+    'marginleft': string;
+    'marginright': string;
+    'margintop': string;
+    'showaxes': string;
+    'startcolor': string;
+    'startopacity': string;
+    'width': string;
+    'xaxis': string;
+    'yaxis': string;
+  }
   interface LineChart {
     'connectnulls': number;
     'data': string;
@@ -45,6 +61,12 @@ export namespace Components {
 declare global {
 
 
+  interface HTMLAreaChartElement extends Components.AreaChart, HTMLStencilElement {}
+  var HTMLAreaChartElement: {
+    prototype: HTMLAreaChartElement;
+    new (): HTMLAreaChartElement;
+  };
+
   interface HTMLLineChartElement extends Components.LineChart, HTMLStencilElement {}
   var HTMLLineChartElement: {
     prototype: HTMLLineChartElement;
@@ -57,12 +79,29 @@ declare global {
     new (): HTMLMyComponentElement;
   };
   interface HTMLElementTagNameMap {
+    'area-chart': HTMLAreaChartElement;
     'line-chart': HTMLLineChartElement;
     'my-component': HTMLMyComponentElement;
   }
 }
 
 declare namespace LocalJSX {
+  interface AreaChart {
+    'data'?: string;
+    'endcolor'?: string;
+    'endopacity'?: string;
+    'height'?: string;
+    'marginbottom'?: string;
+    'marginleft'?: string;
+    'marginright'?: string;
+    'margintop'?: string;
+    'showaxes'?: string;
+    'startcolor'?: string;
+    'startopacity'?: string;
+    'width'?: string;
+    'xaxis'?: string;
+    'yaxis'?: string;
+  }
   interface LineChart {
     'connectnulls'?: number;
     'data'?: string;
@@ -95,6 +134,7 @@ declare namespace LocalJSX {
   }
 
   interface IntrinsicElements {
+    'area-chart': AreaChart;
     'line-chart': LineChart;
     'my-component': MyComponent;
   }
@@ -106,6 +146,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
   export namespace JSX {
     interface IntrinsicElements {
+      'area-chart': LocalJSX.AreaChart & JSXBase.HTMLAttributes<HTMLAreaChartElement>;
       'line-chart': LocalJSX.LineChart & JSXBase.HTMLAttributes<HTMLLineChartElement>;
       'my-component': LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
     }
