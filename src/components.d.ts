@@ -26,6 +26,9 @@ export namespace Components {
     'xaxis': string;
     'yaxis': string;
   }
+  interface BarChart {}
+  interface GroupBarAreaChart {}
+  interface GroupBarChart {}
   interface LineChart {
     'connectnulls': number;
     'data': string;
@@ -67,6 +70,24 @@ declare global {
     new (): HTMLAreaChartElement;
   };
 
+  interface HTMLBarChartElement extends Components.BarChart, HTMLStencilElement {}
+  var HTMLBarChartElement: {
+    prototype: HTMLBarChartElement;
+    new (): HTMLBarChartElement;
+  };
+
+  interface HTMLGroupBarAreaChartElement extends Components.GroupBarAreaChart, HTMLStencilElement {}
+  var HTMLGroupBarAreaChartElement: {
+    prototype: HTMLGroupBarAreaChartElement;
+    new (): HTMLGroupBarAreaChartElement;
+  };
+
+  interface HTMLGroupBarChartElement extends Components.GroupBarChart, HTMLStencilElement {}
+  var HTMLGroupBarChartElement: {
+    prototype: HTMLGroupBarChartElement;
+    new (): HTMLGroupBarChartElement;
+  };
+
   interface HTMLLineChartElement extends Components.LineChart, HTMLStencilElement {}
   var HTMLLineChartElement: {
     prototype: HTMLLineChartElement;
@@ -80,6 +101,9 @@ declare global {
   };
   interface HTMLElementTagNameMap {
     'area-chart': HTMLAreaChartElement;
+    'bar-chart': HTMLBarChartElement;
+    'group-bar-area-chart': HTMLGroupBarAreaChartElement;
+    'group-bar-chart': HTMLGroupBarChartElement;
     'line-chart': HTMLLineChartElement;
     'my-component': HTMLMyComponentElement;
   }
@@ -102,6 +126,9 @@ declare namespace LocalJSX {
     'xaxis'?: string;
     'yaxis'?: string;
   }
+  interface BarChart {}
+  interface GroupBarAreaChart {}
+  interface GroupBarChart {}
   interface LineChart {
     'connectnulls'?: number;
     'data'?: string;
@@ -135,6 +162,9 @@ declare namespace LocalJSX {
 
   interface IntrinsicElements {
     'area-chart': AreaChart;
+    'bar-chart': BarChart;
+    'group-bar-area-chart': GroupBarAreaChart;
+    'group-bar-chart': GroupBarChart;
     'line-chart': LineChart;
     'my-component': MyComponent;
   }
@@ -147,6 +177,9 @@ declare module "@stencil/core" {
   export namespace JSX {
     interface IntrinsicElements {
       'area-chart': LocalJSX.AreaChart & JSXBase.HTMLAttributes<HTMLAreaChartElement>;
+      'bar-chart': LocalJSX.BarChart & JSXBase.HTMLAttributes<HTMLBarChartElement>;
+      'group-bar-area-chart': LocalJSX.GroupBarAreaChart & JSXBase.HTMLAttributes<HTMLGroupBarAreaChartElement>;
+      'group-bar-chart': LocalJSX.GroupBarChart & JSXBase.HTMLAttributes<HTMLGroupBarChartElement>;
       'line-chart': LocalJSX.LineChart & JSXBase.HTMLAttributes<HTMLLineChartElement>;
       'my-component': LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
     }
