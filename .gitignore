@@ -25,3 +25,4 @@ Thumbs.db
 UserInterfaceState.xcuserstate
 .env
 poc/
+src/components/chart/data.js
