@@ -80,6 +80,15 @@ export namespace Components {
     'xaxis': string;
     'yaxis': string;
   }
+  interface MultiLineChart {
+    'chartdata': any;
+    'height': number;
+    'marginbottom': string;
+    'marginleft': string;
+    'marginright': string;
+    'margintop': string;
+    'width': number;
+  }
 }
 
 declare global {
@@ -132,6 +141,12 @@ declare global {
     prototype: HTMLLineChart1Element;
     new (): HTMLLineChart1Element;
   };
+
+  interface HTMLMultiLineChartElement extends Components.MultiLineChart, HTMLStencilElement {}
+  var HTMLMultiLineChartElement: {
+    prototype: HTMLMultiLineChartElement;
+    new (): HTMLMultiLineChartElement;
+  };
   interface HTMLElementTagNameMap {
     'area-chart': HTMLAreaChartElement;
     'bar-chart': HTMLBarChartElement;
@@ -141,6 +156,7 @@ declare global {
     'grouped-bar-chart': HTMLGroupedBarChartElement;
     'line-chart': HTMLLineChartElement;
     'line-chart1': HTMLLineChart1Element;
+    'multi-line-chart': HTMLMultiLineChartElement;
   }
 }
 
@@ -215,6 +231,15 @@ declare namespace LocalJSX {
     'xaxis'?: string;
     'yaxis'?: string;
   }
+  interface MultiLineChart {
+    'chartdata'?: any;
+    'height'?: number;
+    'marginbottom'?: string;
+    'marginleft'?: string;
+    'marginright'?: string;
+    'margintop'?: string;
+    'width'?: number;
+  }
 
   interface IntrinsicElements {
     'area-chart': AreaChart;
@@ -225,6 +250,7 @@ declare namespace LocalJSX {
     'grouped-bar-chart': GroupedBarChart;
     'line-chart': LineChart;
     'line-chart1': LineChart1;
+    'multi-line-chart': MultiLineChart;
   }
 }
 
@@ -242,6 +268,7 @@ declare module "@stencil/core" {
       'grouped-bar-chart': LocalJSX.GroupedBarChart & JSXBase.HTMLAttributes<HTMLGroupedBarChartElement>;
       'line-chart': LocalJSX.LineChart & JSXBase.HTMLAttributes<HTMLLineChartElement>;
       'line-chart1': LocalJSX.LineChart1 & JSXBase.HTMLAttributes<HTMLLineChart1Element>;
+      'multi-line-chart': LocalJSX.MultiLineChart & JSXBase.HTMLAttributes<HTMLMultiLineChartElement>;
     }
   }
 }

@@ -2,12 +2,12 @@ import { Component, h, getAssetPath, State, Prop } from "@stencil/core";
 import * as d3 from "d3";
 
 @Component({
-  tag: "bar-line-chart",
+  tag: "multi-line-chart",
   styleUrl: "index.css",
   shadow: true,
   assetsDirs: ["assets"]
 })
-export class LineBarChart {
+export class MultiSeriesLineChart {
   private divRef: HTMLDivElement;
   private pRef: HTMLParagraphElement;
   private data: any;
@@ -17,6 +17,7 @@ export class LineBarChart {
   private y1: any;
   private x0: any;
   private x1: any;
+  private x: any;
   private colors: any;
   private svg: any;
   private barGroup: any;
@@ -40,6 +41,7 @@ export class LineBarChart {
   private yKeys: any;
   private xKey: any;
   private aggregatedOthers: any;
+  line: any;
 
   constructor() {}
   createSvgGroup(parent, width, height, marginleft, margintop) {
@@ -68,6 +70,7 @@ export class LineBarChart {
       .data(this.colors.domain().slice())
       .join("g")
       .attr("transform", (d, i) => `translate(0,${i * 20})`);
+
     g.append("rect")
       .attr("x", -19)
       .attr("width", 19)
@@ -82,14 +85,16 @@ export class LineBarChart {
   };
 
   appendChart() {}
+
   componentWillLoad() {
     this.clubOthers = true;
   }
 
   componentDidRender() {
+    console.log(this);
     const chartData = this.chartdata ? JSON.parse(this.chartdata) : {};
     this.allDataPoints = chartData.data || [];
-    this.yKeys = chartData.keys;
+    this.yKeys = chartData.keys || [];
     this.xKey = chartData.commonKey;
     this.aggregatedOthers = chartData.aggregatedOthers;
 
@@ -120,6 +125,7 @@ export class LineBarChart {
       .attr("class", "y axis axisLeft")
       // .attr("color", this.colors[0])
       .attr("transform", "translate(" + this.margin.left + ",0)");
+
     if ((this.yKeys || []).length === 2) {
       this.y1Axis = axes
         .append("g")
@@ -127,13 +133,34 @@ export class LineBarChart {
         .attr("class", "y axis axisRight")
         .attr("transform", "translate(" + (this.width - this.margin.right) + ",0)");
     }
-    this.currentRange = "Showing top 1 to 10 of 476";
+    this.currentRange = "Showing top 1 to 10 of " + (this.allDataPoints || []).length;
 
     const groupKey = this.xKey;
 
     const topCities = this.allDataPoints.slice(0, 9);
     topCities.push(this.aggregatedOthers);
     this.data = this.clubOthers && this.allDataPoints.length > 15 ? topCities : this.allDataPoints.slice(0, 10);
+
+    // Add the line for the first time
+
+    //line genrator
+    this.line = this.yKeys.map((key, i) => {
+      this.svg
+        .append("path")
+        .attr("class", "line-" + i)
+        .attr("fill", "none")
+        .attr("stroke", this.colors(key))
+        .attr("stroke-width", "2px");
+      return d3
+        .line()
+        .x(d => {
+          return this.x(d[this.xKey]);
+        })
+        .y(d => {
+          return i === 0 ? this.y0(d[key]) : this.y1([d[key]]);
+        })
+        .curve(d3.curveMonotoneX);
+    });
     this.xAxisCall = d3.axisBottom();
     this.yAxisLeftCall = d3.axisLeft().ticks(null, "s"); //here
     if ((this.yKeys || []).length === 2) {
@@ -144,22 +171,14 @@ export class LineBarChart {
     this.svg.append("g").call(this.legend);
   }
   update = (svg, groupKey, keys) => {
-    //scales
-    this.x0 = d3
-      .scaleBand()
+    this.x = d3
+      .scalePoint()
+      .range([+this.margin.left, +this.width - +this.margin.right])
       .domain(
         this.data.map(d => {
           return d[groupKey];
         })
-      )
-      .rangeRound([+this.margin.left, +this.width - +this.margin.right])
-      .paddingInner(0.1);
-
-    // this.x1 = d3
-    //   .scaleBand()
-    //   .domain(keys)
-    //   .rangeRound([0, this.x0.bandwidth()])
-    //   .padding(0.05);
+      );
 
     this.y0 = d3
       .scaleLinear()
@@ -173,47 +192,15 @@ export class LineBarChart {
       .nice()
       .rangeRound([this.height - this.margin.bottom, this.margin.top]);
     // }
-    const barGroup = svg.select(".bar-group");
+    this.yKeys.forEach((key, index) => {
+      this.svg
+        .select(".line-" + index)
+        .transition()
+        .duration(500)
+        .attr("d", this.line[index](this.data));
+    });
 
-    const rect = barGroup.selectAll("rect").data(this.data, d => d[this.xKey]);
-
-    rect
-      .exit()
-      .transition()
-      .duration(500)
-      .attr("height", 0)
-      .attr("y", this.y0(0))
-      .remove();
-
-    barGroup
-      .append("g")
-      .selectAll("g")
-      .data(this.data)
-      .join("g")
-      .attr("transform", d => {
-        return `translate(${this.x0(d[groupKey])},0)`;
-      })
-      .selectAll("rect")
-      .attr("class", "bar")
-      .data(d => {
-        return { key: keys[0], value: d[keys[0]] };
-      })
-      .join("rect")
-      .attr("x", d => this.x1(d.key))
-      .attr("y", (_d, i) => {
-        return i === 0 ? this.y0(0) : this.y1(0);
-      })
-      .attr("height", 0)
-      .attr("width", this.x1.bandwidth())
-      .transition()
-      .duration(500)
-      .attr("y", (d, i) => {
-        return i === 0 ? this.y0(d.value) : this.y1(d.value);
-      })
-      .attr("height", (d, i) => (i === 0 ? this.y0(0) - this.y0(d.value) : this.y1(0) - this.y1(d.value)))
-      .attr("fill", d => this.colors(d.key));
-
-    this.xAxisCall.scale(this.x0);
+    this.xAxisCall.scale(this.x);
     this.xAxis
       .transition()
       .duration(500)
