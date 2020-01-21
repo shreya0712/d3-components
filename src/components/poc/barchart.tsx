@@ -1,4 +1,4 @@
-import { Component, h, getAssetPath } from "@stencil/core";
+import { Component, h, Prop } from "@stencil/core";
 import * as d3 from "d3";
 
 const value0 = "count_distinct_completed_orders",
@@ -15,10 +15,11 @@ export class Chart {
   private divRef: HTMLDivElement;
   private pRef: HTMLParagraphElement;
   private data: any;
+  @Prop() chartData: any;
   private currentRange: string;
-  private margin: any;
-  private width: any;
-  private height: any;
+  @Prop() margin: any;
+  @Prop() width: any;
+  @Prop() height: any;
   private svg: any;
   private xAxisCall: any;
   private yAxisLeftCall: any;
@@ -75,8 +76,6 @@ export class Chart {
 
     const rect = this.chart.selectAll("rect").data(data, d => d.city);
 
-    console.log(rect, data);
-
     rect
       .exit()
       .transition(t)
@@ -98,7 +97,7 @@ export class Chart {
       .append("rect")
       .attr("id", d => d[xValue] + "-0")
       .attr("class", "bar1")
-      .attr("fill", colors[5])
+      .attr("fill", colors[0])
       .attr("x", d => {
         return this.x(d[xValue]);
       })
@@ -121,7 +120,7 @@ export class Chart {
       .enter()
       .append("rect")
       .attr("id", d => d[xValue] + "-1")
-      .attr("fill", colors[4])
+      .attr("fill", colors[1])
       .attr("class", "bar2")
       .attr("x", d => {
         return this.x(d[xValue]) + this.x.bandwidth() / 2;
@@ -142,9 +141,8 @@ export class Chart {
 
   componentDidRender() {
     const colors = d3.schemeCategory10;
-
     this.margin = { top: 20, left: 80, bottom: 70, right: 80 };
-    this.width = 600 - this.margin.left - this.margin.right;
+    this.width = 500 - this.margin.left - this.margin.right;
     this.height = 400 - this.margin.top - this.margin.bottom;
     this.svg = this.createSvgGroup(
       this.divRef,
@@ -176,65 +174,61 @@ export class Chart {
     this.y0Axis = axes
       .append("g")
       .attr("class", "y axis axisLeft")
-      .attr("stroke", colors[5])
+      .attr("stroke", colors[0])
       .attr("transform", "translate(0,0)");
 
     this.y1Axis = axes
       .append("g")
-      .attr("stroke", colors[4])
+      .attr("stroke", colors[1])
       .attr("class", "y axis axisRight")
       .attr("transform", "translate(" + this.width + ",0)");
 
     this.chart = this.svg.append("g").attr("class", "chart");
 
-    Promise.all([d3.json(getAssetPath("./assets/completedOrders.json")), d3.json(getAssetPath("./assets/GMV.json"))]).then(
-      ([source0, source1]) => {
-        // Do your stuff. Content of both files is now available in stations and svg
-        const data0 = source0.data.records;
-        const data1 = source1.data.records;
-        let combinedData = [];
-        for (let i = 0; i < data0.length; i++) {
-          const x = data1.filter(d => {
-            return d[xValue] === data0[i][xValue];
-          });
-          combinedData.push({ ...data0[i], [value1]: x[0][value1] });
-        }
-        this.currentRange = "Showing top 1 to 10 of 476";
-        this.data = combinedData;
-        const data = combinedData.slice(0, 10);
-        this.updateChart(data, true);
-        // Labels
-        var xLabel = this.svg
-          .append("text")
-          .attr("class", "x axisLabel")
-          .attr("y", this.height + 50)
-          .attr("x", this.width / 2)
-          .attr("font-size", "20px")
-          .attr("text-anchor", "middle")
-          .text(xValue);
-        var yLabel0 = this.svg
-          .append("text")
-          .attr("class", "y axisLabel")
-          .attr("transform", "rotate(-90)")
-          .attr("y", -50)
-          .attr("x", -170)
-          .attr("fill", colors[5])
-          .attr("font-size", "20px")
-          .attr("text-anchor", "middle")
-          .text(value0);
+    // Do your stuff. Content of both files is now available in stations and svg
+    const data0 = this.chartData[0];
+    const data1 = this.chartData[1];
+    let combinedData = [];
+    for (let i = 0; i < data0.length; i++) {
+      const x = data1.filter(d => {
+        return d[xValue] === data0[i][xValue];
+      });
+      combinedData.push({ ...data0[i], [value1]: x[0][value1] });
+    }
+    this.currentRange = "Showing top 1 to 10 of 476";
+    this.data = combinedData;
+    const data = combinedData.slice(0, 10);
+    this.updateChart(data, true);
+    // Labels
+    var xLabel = this.svg
+      .append("text")
+      .attr("class", "x axisLabel")
+      .attr("y", this.height + 50)
+      .attr("x", this.width / 2)
+      .attr("font-size", "20px")
+      .attr("text-anchor", "middle")
+      .text(xValue);
+    var yLabel0 = this.svg
+      .append("text")
+      .attr("class", "y axisLabel")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -50)
+      .attr("x", -170)
+      .attr("fill", colors[0])
+      .attr("font-size", "20px")
+      .attr("text-anchor", "middle")
+      .text(value0);
 
-        var yLabel1 = this.svg
-          .append("text")
-          .attr("class", "y axisLabel")
-          .attr("transform", "rotate(-90)")
-          .attr("y", this.width + this.margin.left - 5)
-          .attr("x", -170)
-          .attr("fill", colors[4])
-          .attr("font-size", "20px")
-          .attr("text-anchor", "middle")
-          .text(value1);
-      }
-    );
+    var yLabel1 = this.svg
+      .append("text")
+      .attr("class", "y axisLabel")
+      .attr("transform", "rotate(-90)")
+      .attr("y", this.width + this.margin.left - 5)
+      .attr("x", -170)
+      .attr("fill", colors[1])
+      .attr("font-size", "20px")
+      .attr("text-anchor", "middle")
+      .text(value1);
   }
 
   handleChange = e => {

@@ -15,8 +15,10 @@ export class Chart {
   private combinedData: any;
   private y0: any;
   private y1: any;
+  private y2: any;
   private x0: any;
   private x1: any;
+  private area: any;
   private colors: any;
   private svg: any;
   private barGroup: any;
@@ -99,37 +101,48 @@ export class Chart {
       .attr("class", "y axis axisRight")
       .attr("transform", "translate(" + (500 - this.margin.left) + ",0)");
 
-    Promise.all([d3.json(getAssetPath("./assets/completedOrders.json")), d3.json(getAssetPath("./assets/GMV.json"))]).then(
-      data => {
-        this.currentRange = "Showing top 1 to 10 of 476";
-        const orders = { data: data[0].data.records, columns: data[0].data.columns };
-        const gmv = { data: data[1].data.records, columns: data[1].data.columns };
-        const groupKey = "city";
-        let combinedData = [];
-        const keys = [orders.columns[1], gmv.columns[1]];
-        for (let i = 0; i < gmv.data.length; i++) {
-          const x = orders.data.filter(d => {
-            return d[groupKey] === gmv.data[i][groupKey];
-          });
-          combinedData.push({ ...gmv.data[i], [orders.columns[1]]: x[0][orders.columns[1]] });
-        }
-        this.combinedData = combinedData;
-        combinedData = combinedData.slice(0, 10);
-        this.data = combinedData;
+    Promise.all([
+      d3.json(getAssetPath("./assets/completedOrders.json")),
+      d3.json(getAssetPath("./assets/GMV.json")),
+      d3.json(getAssetPath("./assets/AOV.json"))
+    ]).then(data => {
+      this.currentRange = "Showing top 1 to 10 of 476";
+      const orders = { data: data[0].data.records, columns: data[0].data.columns };
+      const gmv = { data: data[1].data.records, columns: data[1].data.columns };
+      const aov = { data: data[2].data.records, columns: data[2].data.columns };
+      const groupKey = "city";
+      let combinedData = [];
 
-        this.xAxisCall = d3.axisBottom();
-        this.yAxisLeftCall = d3.axisLeft().ticks(null, "s"); //here
-        this.yAxisRightCall = d3.axisRight().ticks(null, "s");
-        this.barGroup = this.svg.append("g").attr("class", "bar-group");
+      const keys = [orders.columns[1], gmv.columns[1], aov.columns[1]];
 
-        this.update(this.svg, groupKey, keys);
-        this.svg.append("g").call(this.legend);
+      for (let i = 0; i < gmv.data.length; i++) {
+        const x = orders.data.filter(d => {
+          return d[groupKey] === gmv.data[i][groupKey];
+        });
+        const y = aov.data.filter(d => {
+          return d[groupKey] === gmv.data[i][groupKey];
+        });
+        combinedData.push({
+          ...gmv.data[i],
+          [orders.columns[1]]: x[0][orders.columns[1]],
+          [aov.columns[1]]: y[0] ? y[0][aov.columns[1]] : 0
+        });
       }
-    );
+      this.combinedData = combinedData;
+      combinedData = combinedData.slice(0, 10);
+      this.data = combinedData;
+      this.xAxisCall = d3.axisBottom();
+      this.yAxisLeftCall = d3.axisLeft().ticks(null, "s"); //here
+      this.yAxisRightCall = d3.axisRight().ticks(null, "s");
+      this.barGroup = this.svg.append("g").attr("class", "bar-group");
+
+      this.update(this.svg, groupKey, keys);
+      this.svg.append("g").call(this.legend);
+    });
   }
   update = (svg, groupKey, keys) => {
     //scales
-    this.x0 = d3
+    this.x0 = d3 // each city
       .scaleBand()
       .domain(
         this.data.map(d => {
@@ -139,9 +152,9 @@ export class Chart {
       .rangeRound([this.margin.left, 500 - this.margin.right])
       .paddingInner(0.1);
 
-    this.x1 = d3
+    this.x1 = d3 //each metric per city
       .scaleBand()
-      .domain(keys)
+      .domain(keys.slice(0, 2))
       .rangeRound([0, this.x0.bandwidth()])
       .padding(0.05);
 
@@ -157,9 +170,41 @@ export class Chart {
       .nice()
       .rangeRound([500 - this.margin.bottom, this.margin.top]);
 
+    this.y2 = d3
+      .scaleLinear()
+      .domain([0, d3.max(this.data, d => d[keys[2]])])
+      .nice()
+      .range([500 - this.margin.bottom, this.margin.top]);
+
+    this.area = d3
+      .area()
+      .curve(d3.curveMonotoneX)
+      .x(d => {
+        return this.x0(d[groupKey]);
+      })
+      .y0(this.y2(0))
+      .y1(d => {
+        return this.y2(d.AOV);
+      });
+
     const barGroup = svg.select(".bar-group");
 
     const rect = barGroup.selectAll("rect").data(this.data, d => d.city);
+
+    const area = barGroup.selectAll("path").data([this.data]);
+
+    area
+      .enter()
+      .append("path")
+      .attr("d", this.area)
+      .attr("class", "line")
+      .attr("opacity", "0.4")
+      .attr("fill", this.colors("AOV"));
+
+    area
+      .transition()
+      .duration(500)
+      .attr("d", this.area);
 
     rect
       .exit()
@@ -180,7 +225,7 @@ export class Chart {
       .selectAll("rect")
       .attr("class", "bar")
       .data(d => {
-        return keys.map(key => {
+        return keys.slice(0, 2).map(key => {
           return { key, value: d[key] };
         });
       })
@@ -229,7 +274,7 @@ export class Chart {
     this.data = this.combinedData.slice(val - 10, val);
     const groupKey = "city";
     // this.currentRange = "Showing top " + (val - 10) + " to " + val + " of 476";
-    const keys = ["count_distinct_completed_orders", "sum_completed_gmv"];
+    const keys = ["count_distinct_completed_orders", "sum_completed_gmv", "AOV"];
     this.update(this.svg, groupKey, keys);
   };
 

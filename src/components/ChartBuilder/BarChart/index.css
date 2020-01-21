@@ -1,5 +1,10 @@
 svg {
-  border: 1px solid gray;
+  /* border: 1px solid gray; */
+  background-color: #ddd;
+}
+
+section {
+  background-color: transparent;
 }
 input[type="range"] {
   outline: none;
@@ -8,7 +13,7 @@ input[type="range"] {
   position: relative;
   overflow: hidden;
   height: 20px;
-  width: 500px;
+  width: 80%;
   cursor: pointer;
   border-radius: 0; /* iOS */
 }
@@ -18,8 +23,8 @@ input[type="range"] {
 }
 
 /*
-   * 1. Set to 0 width and remove border for a slider without a thumb
-   */
+     * 1. Set to 0 width and remove border for a slider without a thumb
+     */
 ::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 47.6px; /* 1 */

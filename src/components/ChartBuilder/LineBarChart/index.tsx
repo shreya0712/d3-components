@@ -2,17 +2,16 @@ import { Component, h, getAssetPath, State, Prop } from "@stencil/core";
 import * as d3 from "d3";
 
 @Component({
-  tag: "grouped-bar-chart",
-  styleUrl: "gbar.css",
+  tag: "bar-line-chart",
+  styleUrl: "index.css",
   shadow: true,
   assetsDirs: ["assets"]
 })
-export class Chart {
+export class LineBarChart {
   private divRef: HTMLDivElement;
   private pRef: HTMLParagraphElement;
-  @Prop() margin: any;
   private data: any;
-  @Prop() chartData: any;
+  @Prop() chartdata: any;
   private combinedData: any;
   private y0: any;
   private y1: any;
@@ -27,11 +26,20 @@ export class Chart {
   private xAxis: any;
   private y0Axis: any;
   private y1Axis: any;
+  private margin: any;
   private currentRange: string;
   private others: any;
   @State() clubOthers: boolean;
   @Prop() height: number;
   @Prop() width: number;
+  @Prop() marginleft: string;
+  @Prop() marginright: string;
+  @Prop() margintop: string;
+  @Prop() marginbottom: string;
+  private allDataPoints: Array<any>;
+  private yKeys: any;
+  private xKey: any;
+  private aggregatedOthers: any;
 
   constructor() {}
   createSvgGroup(parent, width, height, marginleft, margintop) {
@@ -44,7 +52,8 @@ export class Chart {
       .append("svg")
       .attr("width", width)
       .attr("height", height)
-      .attr("margin-left", `calc((100% - ${this.height}px) / 2)`);
+      .attr("height", height);
+    // .attr("margin-left", `calc((100% - ${this.height}px) / 2)`);
 
     return svg;
   }
@@ -56,15 +65,9 @@ export class Chart {
       .attr("font-family", "sans-serif")
       .attr("font-size", 10)
       .selectAll("g")
-      .data(
-        this.colors
-          .domain()
-          .slice()
-          .reverse()
-      )
+      .data(this.colors.domain().slice())
       .join("g")
       .attr("transform", (d, i) => `translate(0,${i * 20})`);
-
     g.append("rect")
       .attr("x", -19)
       .attr("width", 19)
@@ -84,46 +87,60 @@ export class Chart {
   }
 
   componentDidRender() {
-    this.margin = { top: 50, right: 40, bottom: 50, left: 40 };
+    const chartData = this.chartdata ? JSON.parse(this.chartdata) : {};
+    this.allDataPoints = chartData.data || [];
+    this.yKeys = chartData.keys;
+    this.xKey = chartData.commonKey;
+    this.aggregatedOthers = chartData.aggregatedOthers;
+
+    const minMargin = 50;
+    let width = +this.width,
+      height = +this.height;
+    this.margin = {
+      bottom: minMargin + (+this.marginbottom || 10),
+      top: minMargin + (+this.margintop || 0),
+      left: minMargin + (+this.marginleft || 0),
+      right: minMargin + (+this.marginright || 0)
+    };
+    // pathHeight = height - margintop - marginbottom,
+    // pathwidth = width - marginleft - marginright;
+
     this.colors = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-    this.svg = this.createSvgGroup(this.divRef, this.width, this.height, this.margin.left, this.margin.top);
+    this.svg = this.createSvgGroup(this.divRef, width, height, this.margin.left, this.margin.top);
 
     const axes = this.svg.append("g").attr("class", "axes");
 
     this.xAxis = axes
       .append("g")
       .attr("class", "x-axis")
-      .attr("transform", "translate(0," + (this.height - this.margin.bottom) + ")");
+      .attr("transform", "translate(0," + (height - this.margin.bottom) + ")");
 
     this.y0Axis = axes
       .append("g")
       .attr("class", "y axis axisLeft")
       // .attr("color", this.colors[0])
       .attr("transform", "translate(" + this.margin.left + ",0)");
-
-    this.y1Axis = axes
-      .append("g")
-      //   .attr("stroke", this.colors[1])
-      .attr("class", "y axis axisRight")
-      .attr("transform", "translate(" + (this.width - this.margin.left) + ",0)");
-
+    if ((this.yKeys || []).length === 2) {
+      this.y1Axis = axes
+        .append("g")
+        //   .attr("stroke", this.colors[1])
+        .attr("class", "y axis axisRight")
+        .attr("transform", "translate(" + (this.width - this.margin.right) + ",0)");
+    }
     this.currentRange = "Showing top 1 to 10 of 476";
 
-    const groupKey = "city";
-    let combinedData = [];
-    const keys = this.chartData.keys;
+    const groupKey = this.xKey;
 
-    // this.clubOthers && combinedData.push(others);
-    this.combinedData = this.chartData.data;
-    this.others = this.chartData.aggregateOthers;
-    const topCities = combinedData.slice(0, 9);
-    topCities.push(this.others);
-    this.data = this.clubOthers ? topCities : combinedData.slice(0, 10);
+    const topCities = this.allDataPoints.slice(0, 9);
+    topCities.push(this.aggregatedOthers);
+    this.data = this.clubOthers && this.allDataPoints.length > 15 ? topCities : this.allDataPoints.slice(0, 10);
     this.xAxisCall = d3.axisBottom();
     this.yAxisLeftCall = d3.axisLeft().ticks(null, "s"); //here
-    this.yAxisRightCall = d3.axisRight().ticks(null, "s");
+    if ((this.yKeys || []).length === 2) {
+      this.yAxisRightCall = d3.axisRight().ticks(null, "s");
+    }
     this.barGroup = this.svg.append("g").attr("class", "bar-group");
-    this.update(this.svg, groupKey, keys);
+    this.update(this.svg, groupKey, this.yKeys || []);
     this.svg.append("g").call(this.legend);
   }
   update = (svg, groupKey, keys) => {
@@ -135,37 +152,37 @@ export class Chart {
           return d[groupKey];
         })
       )
-      .rangeRound([this.margin.left, this.width - this.margin.right])
+      .rangeRound([+this.margin.left, +this.width - +this.margin.right])
       .paddingInner(0.1);
 
-    this.x1 = d3
-      .scaleBand()
-      .domain(keys)
-      .rangeRound([0, this.x0.bandwidth()])
-      .padding(0.05);
+    // this.x1 = d3
+    //   .scaleBand()
+    //   .domain(keys)
+    //   .rangeRound([0, this.x0.bandwidth()])
+    //   .padding(0.05);
 
     this.y0 = d3
       .scaleLinear()
       .domain([0, d3.max(this.data, d => d[keys[0]])])
       .nice()
       .rangeRound([this.height - this.margin.bottom, this.margin.top]);
-
+    // if ((this.yKeys || []).length === 2) {
     this.y1 = d3
       .scaleLinear()
-      .domain([0, d3.max(this.data, d => d[keys[1]]) * 1.1])
+      .domain([0, d3.max(this.data, d => d[keys[1]])])
       .nice()
       .rangeRound([this.height - this.margin.bottom, this.margin.top]);
-
+    // }
     const barGroup = svg.select(".bar-group");
 
-    const rect = barGroup.selectAll("rect").data(this.data, d => d.city);
+    const rect = barGroup.selectAll("rect").data(this.data, d => d[this.xKey]);
 
     rect
       .exit()
       .transition()
       .duration(500)
       .attr("height", 0)
-      .attr("y", (d, i) => (i === 0 ? this.y0(0) : this.y1(0)))
+      .attr("y", this.y0(0))
       .remove();
 
     barGroup
@@ -179,13 +196,13 @@ export class Chart {
       .selectAll("rect")
       .attr("class", "bar")
       .data(d => {
-        return keys.map(key => {
-          return { key, value: d[key] };
-        });
+        return { key: keys[0], value: d[keys[0]] };
       })
       .join("rect")
       .attr("x", d => this.x1(d.key))
-      .attr("y", (d, i) => (i === 0 ? this.y0(0) : this.y1(0)))
+      .attr("y", (_d, i) => {
+        return i === 0 ? this.y0(0) : this.y1(0);
+      })
       .attr("height", 0)
       .attr("width", this.x1.bandwidth())
       .transition()
@@ -210,53 +227,69 @@ export class Chart {
       .attr("dy", ".15em")
       .attr("transform", "rotate(-65)");
 
-    this.yAxisLeftCall.scale(this.y1);
+    this.yAxisLeftCall.scale(this.y0);
     this.y0Axis
       .transition()
       .duration(500)
       .call(this.yAxisLeftCall);
-    this.yAxisRightCall.scale(this.y0);
-    this.y1Axis
-      .transition()
-      .duration(500)
-      .call(this.yAxisRightCall);
+    if ((this.yKeys || []).length === 2) {
+      this.yAxisRightCall.scale(this.y1);
+      this.y1Axis
+        .transition()
+        .duration(500)
+        .call(this.yAxisRightCall);
+    }
     this.pRef.innerHTML = this.currentRange;
   };
 
   handleChange = e => {
     const val = e.target.value;
-    this.data = this.combinedData.slice(val - 10, val);
-    const groupKey = "city";
-    this.currentRange = "Showing top " + (val - 10) + " to " + val + " of 476";
-    const keys = this.chartData.keys; //["count_distinct_completed_orders", "sum_completed_gmv"];
-    this.update(this.svg, groupKey, keys);
+    this.data = this.allDataPoints.slice(val - 10, val);
+    const groupKey = this.xKey;
+    this.currentRange = "Showing top " + (val - 10) + " to " + val + " of " + this.data.length;
+    const keys = this.yKeys; //["count_distinct_completed_orders", "sum_completed_gmv"];
+    this.update(this.svg, groupKey, keys || []);
   };
 
   toggleTopCities = e => {
-    if (e.target.checked) {
-      this.clubOthers = true && this.chartData.data.length > 12;
-      this.data = this.combinedData.slice(0, 9);
-      this.data.push(this.others);
-      this.currentRange = "Showing top " + 9 + " of 476";
+    if (e.target.checked && this.allDataPoints.length > 15) {
+      this.clubOthers = true;
+      this.data = this.allDataPoints.slice(0, 9);
+      this.data.push(this.aggregatedOthers);
+      this.currentRange = "Showing top " + 9 + ` of  ${this.data.length}`;
     } else {
-      this.clubOthers = false && this.chartData.data.length > 12;
-      this.data = this.combinedData.slice(0, 10);
-      this.currentRange = "Showing 1-10 of 476";
+      this.clubOthers = false;
+      this.data = this.allDataPoints.slice(0, 10);
+      this.currentRange = `Showing 1-10 of ${this.data.length}`;
     }
-    const groupKey = "city";
-    const keys = this.chartData.keys;
-    this.update(this.svg, groupKey, keys);
+    const keys = this.yKeys;
+    this.update(this.svg, this.xKey, keys || []);
   };
   render() {
     return (
-      <div>
-        <input type="checkbox" name="nameOfChoice" value="1" checked onClick={this.toggleTopCities} /> Show only top cities
-        <div ref={el => (this.divRef = el as HTMLDivElement)}></div>
-        {this.clubOthers ? null : (
-          <input type="range" min="10" max="476" id="range" value="10" onChange={this.handleChange} />
+      <section>
+        <input type="checkbox" name="nameOfChoice" value="1" checked={this.clubOthers} onClick={this.toggleTopCities} />
+        Show only top entries
+        {
+          <div
+            ref={el => (this.divRef = el as HTMLDivElement)}
+            class="chart"
+            style={{ marginLeft: `calc((100% - ${this.height}px) / 2)` }}
+          ></div>
+        }
+        {this.clubOthers || (this.allDataPoints || []).length < 15 ? null : (
+          <input
+            type="range"
+            min="10"
+            max="476"
+            id="range"
+            value="10"
+            onChange={this.handleChange}
+            style={{ marginLeft: `calc((100% - ${this.height}px) / 2)`, width: this.width + "px" }}
+          />
         )}
         <p ref={el => (this.pRef = el as HTMLParagraphElement)}>{this.currentRange || "Showing 1-10 of 476"}</p>
-      </div>
+      </section>
     );
   }
 }

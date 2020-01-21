@@ -26,9 +26,29 @@ export namespace Components {
     'xaxis': string;
     'yaxis': string;
   }
-  interface BarChart {}
+  interface BarChart {
+    'chartData': any;
+    'height': any;
+    'margin': any;
+    'width': any;
+  }
+  interface BubbleChart {}
   interface GroupBarAreaChart {}
-  interface GroupBarChart {}
+  interface GroupBarChart {
+    'chartdata': any;
+    'height': number;
+    'marginbottom': string;
+    'marginleft': string;
+    'marginright': string;
+    'margintop': string;
+    'width': number;
+  }
+  interface GroupedBarChart {
+    'chartData': any;
+    'height': number;
+    'margin': any;
+    'width': number;
+  }
   interface LineChart {
     'connectnulls': number;
     'data': string;
@@ -45,19 +65,20 @@ export namespace Components {
     'xaxis': string;
     'yaxis': string;
   }
-  interface MyComponent {
-    /**
-    * The first name
-    */
-    'first': string;
-    /**
-    * The last name
-    */
-    'last': string;
-    /**
-    * The middle name
-    */
-    'middle': string;
+  interface LineChart1 {
+    'chartdata': string;
+    'connectnulls': number;
+    'dotcolor': string;
+    'enabledots': number;
+    'formatter': any;
+    'height': string;
+    'marginbottom': string;
+    'marginleft': string;
+    'marginright': string;
+    'margintop': string;
+    'width': string;
+    'xaxis': string;
+    'yaxis': string;
   }
 }
 
@@ -76,6 +97,12 @@ declare global {
     new (): HTMLBarChartElement;
   };
 
+  interface HTMLBubbleChartElement extends Components.BubbleChart, HTMLStencilElement {}
+  var HTMLBubbleChartElement: {
+    prototype: HTMLBubbleChartElement;
+    new (): HTMLBubbleChartElement;
+  };
+
   interface HTMLGroupBarAreaChartElement extends Components.GroupBarAreaChart, HTMLStencilElement {}
   var HTMLGroupBarAreaChartElement: {
     prototype: HTMLGroupBarAreaChartElement;
@@ -88,24 +115,32 @@ declare global {
     new (): HTMLGroupBarChartElement;
   };
 
+  interface HTMLGroupedBarChartElement extends Components.GroupedBarChart, HTMLStencilElement {}
+  var HTMLGroupedBarChartElement: {
+    prototype: HTMLGroupedBarChartElement;
+    new (): HTMLGroupedBarChartElement;
+  };
+
   interface HTMLLineChartElement extends Components.LineChart, HTMLStencilElement {}
   var HTMLLineChartElement: {
     prototype: HTMLLineChartElement;
     new (): HTMLLineChartElement;
   };
 
-  interface HTMLMyComponentElement extends Components.MyComponent, HTMLStencilElement {}
-  var HTMLMyComponentElement: {
-    prototype: HTMLMyComponentElement;
-    new (): HTMLMyComponentElement;
+  interface HTMLLineChart1Element extends Components.LineChart1, HTMLStencilElement {}
+  var HTMLLineChart1Element: {
+    prototype: HTMLLineChart1Element;
+    new (): HTMLLineChart1Element;
   };
   interface HTMLElementTagNameMap {
     'area-chart': HTMLAreaChartElement;
     'bar-chart': HTMLBarChartElement;
+    'bubble-chart': HTMLBubbleChartElement;
     'group-bar-area-chart': HTMLGroupBarAreaChartElement;
     'group-bar-chart': HTMLGroupBarChartElement;
+    'grouped-bar-chart': HTMLGroupedBarChartElement;
     'line-chart': HTMLLineChartElement;
-    'my-component': HTMLMyComponentElement;
+    'line-chart1': HTMLLineChart1Element;
   }
 }
 
@@ -126,9 +161,29 @@ declare namespace LocalJSX {
     'xaxis'?: string;
     'yaxis'?: string;
   }
-  interface BarChart {}
+  interface BarChart {
+    'chartData'?: any;
+    'height'?: any;
+    'margin'?: any;
+    'width'?: any;
+  }
+  interface BubbleChart {}
   interface GroupBarAreaChart {}
-  interface GroupBarChart {}
+  interface GroupBarChart {
+    'chartdata'?: any;
+    'height'?: number;
+    'marginbottom'?: string;
+    'marginleft'?: string;
+    'marginright'?: string;
+    'margintop'?: string;
+    'width'?: number;
+  }
+  interface GroupedBarChart {
+    'chartData'?: any;
+    'height'?: number;
+    'margin'?: any;
+    'width'?: number;
+  }
   interface LineChart {
     'connectnulls'?: number;
     'data'?: string;
@@ -145,28 +200,31 @@ declare namespace LocalJSX {
     'xaxis'?: string;
     'yaxis'?: string;
   }
-  interface MyComponent {
-    /**
-    * The first name
-    */
-    'first'?: string;
-    /**
-    * The last name
-    */
-    'last'?: string;
-    /**
-    * The middle name
-    */
-    'middle'?: string;
+  interface LineChart1 {
+    'chartdata'?: string;
+    'connectnulls'?: number;
+    'dotcolor'?: string;
+    'enabledots'?: number;
+    'formatter'?: any;
+    'height'?: string;
+    'marginbottom'?: string;
+    'marginleft'?: string;
+    'marginright'?: string;
+    'margintop'?: string;
+    'width'?: string;
+    'xaxis'?: string;
+    'yaxis'?: string;
   }
 
   interface IntrinsicElements {
     'area-chart': AreaChart;
     'bar-chart': BarChart;
+    'bubble-chart': BubbleChart;
     'group-bar-area-chart': GroupBarAreaChart;
     'group-bar-chart': GroupBarChart;
+    'grouped-bar-chart': GroupedBarChart;
     'line-chart': LineChart;
-    'my-component': MyComponent;
+    'line-chart1': LineChart1;
   }
 }
 
@@ -178,10 +236,12 @@ declare module "@stencil/core" {
     interface IntrinsicElements {
       'area-chart': LocalJSX.AreaChart & JSXBase.HTMLAttributes<HTMLAreaChartElement>;
       'bar-chart': LocalJSX.BarChart & JSXBase.HTMLAttributes<HTMLBarChartElement>;
+      'bubble-chart': LocalJSX.BubbleChart & JSXBase.HTMLAttributes<HTMLBubbleChartElement>;
       'group-bar-area-chart': LocalJSX.GroupBarAreaChart & JSXBase.HTMLAttributes<HTMLGroupBarAreaChartElement>;
       'group-bar-chart': LocalJSX.GroupBarChart & JSXBase.HTMLAttributes<HTMLGroupBarChartElement>;
+      'grouped-bar-chart': LocalJSX.GroupedBarChart & JSXBase.HTMLAttributes<HTMLGroupedBarChartElement>;
       'line-chart': LocalJSX.LineChart & JSXBase.HTMLAttributes<HTMLLineChartElement>;
-      'my-component': LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
+      'line-chart1': LocalJSX.LineChart1 & JSXBase.HTMLAttributes<HTMLLineChart1Element>;
     }
   }
 }
