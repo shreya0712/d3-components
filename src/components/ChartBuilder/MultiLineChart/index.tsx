@@ -91,7 +91,6 @@ export class MultiSeriesLineChart {
   }
 
   componentDidRender() {
-    console.log(this);
     const chartData = this.chartdata ? JSON.parse(this.chartdata) : {};
     this.allDataPoints = chartData.data || [];
     this.yKeys = chartData.keys || [];

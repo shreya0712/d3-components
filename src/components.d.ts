@@ -26,14 +26,6 @@ export namespace Components {
     'xaxis': string;
     'yaxis': string;
   }
-  interface BarChart {
-    'chartData': any;
-    'height': any;
-    'margin': any;
-    'width': any;
-  }
-  interface BubbleChart {}
-  interface GroupBarAreaChart {}
   interface GroupBarChart {
     'chartdata': any;
     'height': number;
@@ -41,12 +33,6 @@ export namespace Components {
     'marginleft': string;
     'marginright': string;
     'margintop': string;
-    'width': number;
-  }
-  interface GroupedBarChart {
-    'chartData': any;
-    'height': number;
-    'margin': any;
     'width': number;
   }
   interface LineChart {
@@ -100,34 +86,10 @@ declare global {
     new (): HTMLAreaChartElement;
   };
 
-  interface HTMLBarChartElement extends Components.BarChart, HTMLStencilElement {}
-  var HTMLBarChartElement: {
-    prototype: HTMLBarChartElement;
-    new (): HTMLBarChartElement;
-  };
-
-  interface HTMLBubbleChartElement extends Components.BubbleChart, HTMLStencilElement {}
-  var HTMLBubbleChartElement: {
-    prototype: HTMLBubbleChartElement;
-    new (): HTMLBubbleChartElement;
-  };
-
-  interface HTMLGroupBarAreaChartElement extends Components.GroupBarAreaChart, HTMLStencilElement {}
-  var HTMLGroupBarAreaChartElement: {
-    prototype: HTMLGroupBarAreaChartElement;
-    new (): HTMLGroupBarAreaChartElement;
-  };
-
   interface HTMLGroupBarChartElement extends Components.GroupBarChart, HTMLStencilElement {}
   var HTMLGroupBarChartElement: {
     prototype: HTMLGroupBarChartElement;
     new (): HTMLGroupBarChartElement;
-  };
-
-  interface HTMLGroupedBarChartElement extends Components.GroupedBarChart, HTMLStencilElement {}
-  var HTMLGroupedBarChartElement: {
-    prototype: HTMLGroupedBarChartElement;
-    new (): HTMLGroupedBarChartElement;
   };
 
   interface HTMLLineChartElement extends Components.LineChart, HTMLStencilElement {}
@@ -149,11 +111,7 @@ declare global {
   };
   interface HTMLElementTagNameMap {
     'area-chart': HTMLAreaChartElement;
-    'bar-chart': HTMLBarChartElement;
-    'bubble-chart': HTMLBubbleChartElement;
-    'group-bar-area-chart': HTMLGroupBarAreaChartElement;
     'group-bar-chart': HTMLGroupBarChartElement;
-    'grouped-bar-chart': HTMLGroupedBarChartElement;
     'line-chart': HTMLLineChartElement;
     'line-chart1': HTMLLineChart1Element;
     'multi-line-chart': HTMLMultiLineChartElement;
@@ -177,14 +135,6 @@ declare namespace LocalJSX {
     'xaxis'?: string;
     'yaxis'?: string;
   }
-  interface BarChart {
-    'chartData'?: any;
-    'height'?: any;
-    'margin'?: any;
-    'width'?: any;
-  }
-  interface BubbleChart {}
-  interface GroupBarAreaChart {}
   interface GroupBarChart {
     'chartdata'?: any;
     'height'?: number;
@@ -192,12 +142,6 @@ declare namespace LocalJSX {
     'marginleft'?: string;
     'marginright'?: string;
     'margintop'?: string;
-    'width'?: number;
-  }
-  interface GroupedBarChart {
-    'chartData'?: any;
-    'height'?: number;
-    'margin'?: any;
     'width'?: number;
   }
   interface LineChart {
@@ -243,11 +187,7 @@ declare namespace LocalJSX {
 
   interface IntrinsicElements {
     'area-chart': AreaChart;
-    'bar-chart': BarChart;
-    'bubble-chart': BubbleChart;
-    'group-bar-area-chart': GroupBarAreaChart;
     'group-bar-chart': GroupBarChart;
-    'grouped-bar-chart': GroupedBarChart;
     'line-chart': LineChart;
     'line-chart1': LineChart1;
     'multi-line-chart': MultiLineChart;
@@ -261,11 +201,7 @@ declare module "@stencil/core" {
   export namespace JSX {
     interface IntrinsicElements {
       'area-chart': LocalJSX.AreaChart & JSXBase.HTMLAttributes<HTMLAreaChartElement>;
-      'bar-chart': LocalJSX.BarChart & JSXBase.HTMLAttributes<HTMLBarChartElement>;
-      'bubble-chart': LocalJSX.BubbleChart & JSXBase.HTMLAttributes<HTMLBubbleChartElement>;
-      'group-bar-area-chart': LocalJSX.GroupBarAreaChart & JSXBase.HTMLAttributes<HTMLGroupBarAreaChartElement>;
       'group-bar-chart': LocalJSX.GroupBarChart & JSXBase.HTMLAttributes<HTMLGroupBarChartElement>;
-      'grouped-bar-chart': LocalJSX.GroupedBarChart & JSXBase.HTMLAttributes<HTMLGroupedBarChartElement>;
       'line-chart': LocalJSX.LineChart & JSXBase.HTMLAttributes<HTMLLineChartElement>;
       'line-chart1': LocalJSX.LineChart1 & JSXBase.HTMLAttributes<HTMLLineChart1Element>;
       'multi-line-chart': LocalJSX.MultiLineChart & JSXBase.HTMLAttributes<HTMLMultiLineChartElement>;
