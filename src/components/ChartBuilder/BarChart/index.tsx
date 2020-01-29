@@ -4,15 +4,13 @@ import * as d3 from "d3";
 @Component({
   tag: "group-bar-chart",
   styleUrl: "index.css",
-  shadow: true,
-  assetsDirs: ["assets"]
+  shadow: true
 })
 export class Chart {
   private divRef: HTMLDivElement;
   private pRef: HTMLParagraphElement;
   private data: any;
   @Prop() chartdata: any;
-  private combinedData: any;
   private y0: any;
   private y1: any;
   private x0: any;
@@ -28,7 +26,6 @@ export class Chart {
   private y1Axis: any;
   private margin: any;
   private currentRange: string;
-  private others: any;
   @State() clubOthers: boolean;
   @Prop() height: number;
   @Prop() width: number;
@@ -51,9 +48,7 @@ export class Chart {
       .select(parent)
       .append("svg")
       .attr("width", width)
-      .attr("height", height)
       .attr("height", height);
-    // .attr("margin-left", `calc((100% - ${this.height}px) / 2)`);
 
     return svg;
   }
@@ -81,7 +76,6 @@ export class Chart {
       .text(d => d);
   };
 
-  appendChart() {}
   componentWillLoad() {
     this.clubOthers = true;
   }
@@ -102,10 +96,14 @@ export class Chart {
       left: minMargin + (+this.marginleft || 0),
       right: minMargin + (+this.marginright || 0)
     };
-    // pathHeight = height - margintop - marginbottom,
-    // pathwidth = width - marginleft - marginright;
 
-    this.colors = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+    // this.colors = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+    this.colors = d3
+      .scaleOrdinal(
+        this.yKeys.map(d => d),
+        d3.schemeSet2
+      )
+      .unknown("black");
     this.svg = this.createSvgGroup(this.divRef, width, height, this.margin.left, this.margin.top);
 
     const axes = this.svg.append("g").attr("class", "axes");
@@ -118,16 +116,16 @@ export class Chart {
     this.y0Axis = axes
       .append("g")
       .attr("class", "y axis axisLeft")
-      // .attr("color", this.colors[0])
+      .attr("color", this.colors(this.yKeys[0]))
       .attr("transform", "translate(" + this.margin.left + ",0)");
     if ((this.yKeys || []).length === 2) {
       this.y1Axis = axes
         .append("g")
-        //   .attr("stroke", this.colors[1])
+        .attr("stroke", this.colors(this.yKeys[1]))
         .attr("class", "y axis axisRight")
         .attr("transform", "translate(" + (this.width - this.margin.right) + ",0)");
     }
-    this.currentRange = "Showing top 1 to 10 of 476";
+    this.currentRange = "Showing top 1 to 10 of " + this.allDataPoints.length;
 
     const groupKey = this.xKey;
 
@@ -166,13 +164,13 @@ export class Chart {
       .domain([0, d3.max(this.data, d => d[keys[0]])])
       .nice()
       .rangeRound([this.height - this.margin.bottom, this.margin.top]);
-    // if ((this.yKeys || []).length === 2) {
-    this.y1 = d3
-      .scaleLinear()
-      .domain([0, d3.max(this.data, d => d[keys[1]])])
-      .nice()
-      .rangeRound([this.height - this.margin.bottom, this.margin.top]);
-    // }
+    if ((this.yKeys || []).length === 2) {
+      this.y1 = d3
+        .scaleLinear()
+        .domain([0, d3.max(this.data, d => d[keys[1]])])
+        .nice()
+        .rangeRound([this.height - this.margin.bottom, this.margin.top]);
+    }
     const barGroup = svg.select(".bar-group");
 
     const rect = barGroup.selectAll("rect").data(this.data, d => d[this.xKey]);
@@ -283,14 +281,19 @@ export class Chart {
           <input
             type="range"
             min="10"
-            max="476"
+            max={(this.allDataPoints || []).length}
             id="range"
             value="10"
             onChange={this.handleChange}
             style={{ marginLeft: `calc((100% - ${this.height}px) / 2)`, width: this.width + "px" }}
           />
         )}
-        <p ref={el => (this.pRef = el as HTMLParagraphElement)}>{this.currentRange || "Showing 1-10 of 476"}</p>
+        <p
+          ref={el => (this.pRef = el as HTMLParagraphElement)}
+          hidden={this.clubOthers || (this.allDataPoints || []).length < 15}
+        >
+          {this.currentRange || "Showing 1-10 of " + (this.allDataPoints || []).length}
+        </p>
       </section>
     );
   }

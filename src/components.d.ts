@@ -51,22 +51,16 @@ export namespace Components {
     'xaxis': string;
     'yaxis': string;
   }
-  interface LineChart1 {
-    'chartdata': string;
-    'connectnulls': number;
-    'dotcolor': string;
-    'enabledots': number;
-    'formatter': any;
-    'height': string;
+  interface MultiLineChart {
+    'chartdata': any;
+    'height': number;
     'marginbottom': string;
     'marginleft': string;
     'marginright': string;
     'margintop': string;
-    'width': string;
-    'xaxis': string;
-    'yaxis': string;
+    'width': number;
   }
-  interface MultiLineChart {
+  interface ScatterPlot {
     'chartdata': any;
     'height': number;
     'marginbottom': string;
@@ -98,23 +92,23 @@ declare global {
     new (): HTMLLineChartElement;
   };
 
-  interface HTMLLineChart1Element extends Components.LineChart1, HTMLStencilElement {}
-  var HTMLLineChart1Element: {
-    prototype: HTMLLineChart1Element;
-    new (): HTMLLineChart1Element;
-  };
-
   interface HTMLMultiLineChartElement extends Components.MultiLineChart, HTMLStencilElement {}
   var HTMLMultiLineChartElement: {
     prototype: HTMLMultiLineChartElement;
     new (): HTMLMultiLineChartElement;
   };
+
+  interface HTMLScatterPlotElement extends Components.ScatterPlot, HTMLStencilElement {}
+  var HTMLScatterPlotElement: {
+    prototype: HTMLScatterPlotElement;
+    new (): HTMLScatterPlotElement;
+  };
   interface HTMLElementTagNameMap {
     'area-chart': HTMLAreaChartElement;
     'group-bar-chart': HTMLGroupBarChartElement;
     'line-chart': HTMLLineChartElement;
-    'line-chart1': HTMLLineChart1Element;
     'multi-line-chart': HTMLMultiLineChartElement;
+    'scatter-plot': HTMLScatterPlotElement;
   }
 }
 
@@ -160,22 +154,16 @@ declare namespace LocalJSX {
     'xaxis'?: string;
     'yaxis'?: string;
   }
-  interface LineChart1 {
-    'chartdata'?: string;
-    'connectnulls'?: number;
-    'dotcolor'?: string;
-    'enabledots'?: number;
-    'formatter'?: any;
-    'height'?: string;
+  interface MultiLineChart {
+    'chartdata'?: any;
+    'height'?: number;
     'marginbottom'?: string;
     'marginleft'?: string;
     'marginright'?: string;
     'margintop'?: string;
-    'width'?: string;
-    'xaxis'?: string;
-    'yaxis'?: string;
+    'width'?: number;
   }
-  interface MultiLineChart {
+  interface ScatterPlot {
     'chartdata'?: any;
     'height'?: number;
     'marginbottom'?: string;
@@ -189,8 +177,8 @@ declare namespace LocalJSX {
     'area-chart': AreaChart;
     'group-bar-chart': GroupBarChart;
     'line-chart': LineChart;
-    'line-chart1': LineChart1;
     'multi-line-chart': MultiLineChart;
+    'scatter-plot': ScatterPlot;
   }
 }
 
@@ -203,8 +191,8 @@ declare module "@stencil/core" {
       'area-chart': LocalJSX.AreaChart & JSXBase.HTMLAttributes<HTMLAreaChartElement>;
       'group-bar-chart': LocalJSX.GroupBarChart & JSXBase.HTMLAttributes<HTMLGroupBarChartElement>;
       'line-chart': LocalJSX.LineChart & JSXBase.HTMLAttributes<HTMLLineChartElement>;
-      'line-chart1': LocalJSX.LineChart1 & JSXBase.HTMLAttributes<HTMLLineChart1Element>;
       'multi-line-chart': LocalJSX.MultiLineChart & JSXBase.HTMLAttributes<HTMLMultiLineChartElement>;
+      'scatter-plot': LocalJSX.ScatterPlot & JSXBase.HTMLAttributes<HTMLScatterPlotElement>;
     }
   }
 }

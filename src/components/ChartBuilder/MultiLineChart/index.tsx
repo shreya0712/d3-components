@@ -53,7 +53,6 @@ export class MultiSeriesLineChart {
       .select(parent)
       .append("svg")
       .attr("width", width)
-      .attr("height", height)
       .attr("height", height);
     // .attr("margin-left", `calc((100% - ${this.height}px) / 2)`);
 
@@ -106,10 +105,15 @@ export class MultiSeriesLineChart {
       left: minMargin + (+this.marginleft || 0),
       right: minMargin + (+this.marginright || 0)
     };
-    // pathHeight = height - margintop - marginbottom,
-    // pathwidth = width - marginleft - marginright;
 
-    this.colors = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+    // this.colors = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+    this.colors = d3
+      .scaleOrdinal(
+        this.yKeys.map(d => d),
+        d3.schemeSet2
+      )
+      .unknown("black");
     this.svg = this.createSvgGroup(this.divRef, width, height, this.margin.left, this.margin.top);
 
     const axes = this.svg.append("g").attr("class", "axes");
@@ -122,13 +126,13 @@ export class MultiSeriesLineChart {
     this.y0Axis = axes
       .append("g")
       .attr("class", "y axis axisLeft")
-      // .attr("color", this.colors[0])
+      .attr("color", this.colors(this.yKeys[0]))
       .attr("transform", "translate(" + this.margin.left + ",0)");
 
     if ((this.yKeys || []).length === 2) {
       this.y1Axis = axes
         .append("g")
-        //   .attr("stroke", this.colors[1])
+        .attr("stroke", this.colors(this.yKeys[1]))
         .attr("class", "y axis axisRight")
         .attr("transform", "translate(" + (this.width - this.margin.right) + ",0)");
     }
@@ -198,6 +202,16 @@ export class MultiSeriesLineChart {
         .duration(500)
         .attr("d", this.line[index](this.data));
     });
+    if (this.allDataPoints.length === 1) {
+      this.yKeys.forEach((key, index) => {
+        this.svg
+          .append("circle")
+          .attr("r", 2)
+          .attr("fill", this.colors(key))
+          .attr("cx", this.x(this.allDataPoints[0][this.xKey]))
+          .attr("cy", index === 0 ? this.y0(this.allDataPoints[0][key]) : this.y1(this.allDataPoints[0][key]));
+      });
+    }
 
     this.xAxisCall.scale(this.x);
     this.xAxis
@@ -231,6 +245,7 @@ export class MultiSeriesLineChart {
   handleChange = e => {
     const val = e.target.value;
     this.data = this.allDataPoints.slice(val - 10, val);
+    // console.log(val, this.data);
     const groupKey = this.xKey;
     this.currentRange = "Showing top " + (val - 10) + " to " + val + " of " + this.data.length;
     const keys = this.yKeys; //["count_distinct_completed_orders", "sum_completed_gmv"];
@@ -246,7 +261,7 @@ export class MultiSeriesLineChart {
     } else {
       this.clubOthers = false;
       this.data = this.allDataPoints.slice(0, 10);
-      this.currentRange = `Showing 1-10 of ${this.data.length}`;
+      this.currentRange = `Showing 1-${this.data.length > 15 ? 10 : this.data.length} of ${this.data.length}`;
     }
     const keys = this.yKeys;
     this.update(this.svg, this.xKey, keys || []);
@@ -267,14 +282,19 @@ export class MultiSeriesLineChart {
           <input
             type="range"
             min="10"
-            max="476"
+            max={(this.allDataPoints || []).length}
             id="range"
             value="10"
             onChange={this.handleChange}
             style={{ marginLeft: `calc((100% - ${this.height}px) / 2)`, width: this.width + "px" }}
           />
         )}
-        <p ref={el => (this.pRef = el as HTMLParagraphElement)}>{this.currentRange || "Showing 1-10 of 476"}</p>
+        <p
+          ref={el => (this.pRef = el as HTMLParagraphElement)}
+          hidden={this.clubOthers || (this.allDataPoints || []).length < 15}
+        >
+          {this.currentRange || "Showing 1-10 of " + (this.allDataPoints || []).length}
+        </p>
       </section>
     );
   }
